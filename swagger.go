@@ -19,6 +19,7 @@ type Config struct {
 	DeepLinking  bool
 	DocExpansion string
 	DomID        string
+	CORS 		 string
 }
 
 // URL presents the url pointing to API definition (normally swagger.json or swagger.yaml).
@@ -49,6 +50,13 @@ func DomID(domID string) func(c *Config) {
 	}
 }
 
+// CORS edit cors header
+func CORS(cors string) func(c *Config) {
+	return func(c *Config) {
+		c.CORS = cors
+	}
+}
+
 // Handler wraps `http.Handler` into `http.HandlerFunc`.
 func Handler(configFns ...func(*Config)) http.HandlerFunc {
 	config := &Config{
@@ -56,6 +64,7 @@ func Handler(configFns ...func(*Config)) http.HandlerFunc {
 		DeepLinking:  true,
 		DocExpansion: "list",
 		DomID:        "#swagger-ui",
+		CORS: 		  "*",
 	}
 	for _, configFn := range configFns {
 		configFn(config)
@@ -68,6 +77,7 @@ func Handler(configFns ...func(*Config)) http.HandlerFunc {
 	var re = regexp.MustCompile(`^(.*/)([^?].*)?[?|.]*$`)
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", config.CORS)
 		matches := re.FindStringSubmatch(r.RequestURI)
 		path := matches[2]
 		prefix := matches[1]
